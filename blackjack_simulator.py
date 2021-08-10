@@ -326,7 +326,7 @@ def main():
     table = Table()
     hands_played = 0
 
-    while hands_played < args.hands:
+    while hands_played < int(args.hands):
         table.new_shoe(args.decks, args.pen)
 
         while not table.shuffle_pending:
@@ -358,7 +358,7 @@ def main():
 
             logging.debug('-------------------------------')
 
-            if hands_played >= args.hands:
+            if hands_played >= int(args.hands):
                 return
 
 
