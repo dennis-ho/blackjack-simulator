@@ -6,15 +6,15 @@ import logging
 import math
 import random
 
-H = 'H'
-S = 'S'
-Dh = 'DH'
-Ds = 'DS'
-P = 'P'
-Ph = 'PH'
-Rh = 'RH'
-Rs = 'RS'
-Rp = 'RP'
+H = 'H'  # Hit
+S = 'S'  # Stand
+Dh = 'DH'  # Double Down if allowed, otherwise Hit
+Ds = 'DS'  # Double Down if allowed, otherwise Stand
+P = 'P'  # Split
+Ph = 'PH'  # Split if allowed, otherwise Hit
+Rh = 'RH'  # Surrender if allowed, otherwise Hit
+Rs = 'RS'  # Surrender if allowed, otherwise Stand
+Rp = 'RP'  # Surrender if allowed, otherwise Split
 
 split_strategy = [
     #2   3   4   5   6   7   8   9   10  A
@@ -323,10 +323,10 @@ def main():
         csv_writer = csv.DictWriter(csv_file, fieldnames=csv_columns)
         csv_writer.writeheader()
 
-    results_log = []
     table = Table()
+    hands_played = 0
 
-    while len(results_log) < args.hands:
+    while hands_played < args.hands:
         table.new_shoe(args.decks, args.pen)
 
         while not table.shuffle_pending:
@@ -348,17 +348,17 @@ def main():
             logging.debug('player final: %s', table.player_hand)
 
             logging.info('results: %s', table.results())
-            results_log.append(table.results())
 
             with open(args.output_path, 'a') as csv_file:
                 csv_writer = csv.DictWriter(csv_file, fieldnames=csv_columns)
                 csv_writer.writerow(table.results())
 
-            logging.debug('hands played: %s', len(results_log))
+            hands_played += 1
+            logging.debug('hands played: %s', hands_played)
 
             logging.debug('-------------------------------')
 
-            if len(results_log) >= args.hands:
+            if hands_played >= args.hands:
                 return
 
 
