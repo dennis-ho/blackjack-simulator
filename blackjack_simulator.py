@@ -143,6 +143,7 @@ class Table:
         self.shoe = [2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 11] * 4 * decks
         random.shuffle(self.shoe)
         self.shoe.insert(int(math.floor(penetration * 52)), 0)  # 0 value card indicates cut card
+        _ = self.next_card()  # Burn first card
         self.cards_remaining = len(self.shoe)
         self.shuffle_pending = False
 
