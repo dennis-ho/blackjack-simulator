@@ -131,6 +131,7 @@ class Hand:
 class Table:
     def __init__(self):
         self.shoe = []
+        self.discard_pile = []
         self.shoe_id = -1
         self.dealer_hand = Hand()
         self.player_hand = [Hand()]
@@ -143,11 +144,13 @@ class Table:
         self.shoe = [2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 11] * 4 * decks
         random.shuffle(self.shoe)
         self.shoe.insert(int(math.floor(penetration * 52)), 0)  # 0 value card indicates cut card
-        _ = self.next_card()  # Burn first card
+        self.discard_pile = [self.next_card()]  # Burn first card
         self.cards_remaining = len(self.shoe)
         self.shuffle_pending = False
 
     def initial_deal(self):
+        self.clean_table()
+
         self.dealer_hand = Hand()
         self.player_hand = [Hand()]
         self.curr_idx = 0
@@ -272,10 +275,10 @@ class Table:
         for hand in self.player_hand:
             if hand.value() > 21:
                 result_val['win'] -= hand.bet
-            elif hand.is_blackjack():
-                result_val['win'] += 1.5 * hand.bet
             elif hand.surrendered:
                 result_val['win'] -= hand.bet
+            elif hand.is_blackjack():
+                result_val['win'] += 1.5 * hand.bet
             elif hand.value() > self.dealer_hand.value():
                 result_val['win'] += hand.bet
             elif hand.value() < self.dealer_hand.value():
@@ -285,11 +288,20 @@ class Table:
         return result_val
 
     def run_count(self):
-        return -count_hi_lo(self.shoe)
+        return count_hi_lo(self.discard_pile)
 
     def true_count(self):
         decks_remaining = len(self.shoe) / 52
         return math.trunc(self.run_count() / decks_remaining)
+
+    def clean_table(self):
+        try:
+            self.discard_pile.append(self.dealer_hand.cards[1])  # Upcard position switches with hole card when flipped
+            self.discard_pile.append(self.dealer_hand.cards[0])
+            self.discard_pile.extend(self.dealer_hand.cards[2:])
+            self.discard_pile.extend([c for cards in [hand.cards for hand in self.player_hand] for c in cards][::-1])
+        except IndexError:
+            pass
 
 
 def main():
