@@ -279,6 +279,8 @@ class Table:
                 result_val['win'] -= hand.bet
             elif hand.is_blackjack():
                 result_val['win'] += 1.5 * hand.bet
+            elif self.dealer_hand.value() > 21:
+                result_val['win'] += hand.bet
             elif hand.value() > self.dealer_hand.value():
                 result_val['win'] += hand.bet
             elif hand.value() < self.dealer_hand.value():
