@@ -114,7 +114,7 @@ class Hand:
         return hand_val
 
     def is_blackjack(self):
-        return self.value() == 21 and len(self.cards) == 2 and self.from_split is False
+        return self.value() == 21 and len(self.cards) == 2 and 'P' not in self.actions and self.from_split is False
 
     def is_soft(self):
         hand_val = sum(self.cards)
@@ -220,10 +220,15 @@ class Table:
             new_hand.from_split = True
             new_hand.cards.append(self.curr().cards.pop())
             self.player_hand.append(new_hand)
+            if new_hand.cards[0] == 11:  # Only 1 card when splitting Aces
+                self.curr().cards.append(self.next_card())
+                self.curr_idx += 1
+                new_hand.cards.append(self.next_card())
         if action == 'R':
             self.curr().surrendered = True
             self.curr().bet /= 2
-        if action == 'S' or action == 'D' or action == 'R' or self.curr().value() > 21 or action is None:
+        if action == 'S' or action == 'D' or action == 'R' or self.curr().value() > 21 or \
+                self.curr().from_split and self.curr().cards[0] == 11 or action is None:
             if self.curr_idx == len(self.player_hand) - 1:
                 self.curr_idx = None
                 self.finish_dealer_hand()
