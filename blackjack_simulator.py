@@ -261,19 +261,17 @@ class Table:
             'win': 0,
         }
 
+        insurance_cost = self.player_hand[0].bet * 0.5
         if self.player_hand[0].insured:
-            insurance_cost = self.player_hand[0].bet * 0.5
             result_val['win'] -= insurance_cost  # Charge insurance
-
         if self.dealer_hand.is_blackjack():
             if self.player_hand[0].insured:
                 result_val['win'] += insurance_cost * 3  # Insurance pays 2:1 plus return original charge
-            if not self.player_hand[0].is_blackjack():
-                result_val['win'] -= self.player_hand[0].bet
-            return result_val
 
         for hand in self.player_hand:
-            if hand.value() > 21:
+            if self.dealer_hand.is_blackjack():
+                result_val['win'] -= hand.bet if not hand.is_blackjack() else 0
+            elif hand.value() > 21:
                 result_val['win'] -= hand.bet
             elif hand.surrendered:
                 result_val['win'] -= hand.bet
@@ -320,6 +318,7 @@ def main():
     log_levels = {
         'debug': logging.DEBUG,
         'info': logging.INFO,
+        'critical': logging.CRITICAL,
     }
     log_level = log_levels[args.log_level.lower()]
     logging.basicConfig(filename=args.log_path, format='%(levelname)s:%(message)s', level=log_level, filemode='w')
