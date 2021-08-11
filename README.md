@@ -21,6 +21,7 @@ https://www.kaggle.com/dennisho/100-million-blackjack-hands
 
 #### Things to note:
 * All hands are played "heads up" (single player vs the dealer)
+* The player will always play according to correct Basic Strategy
 * Starting bet for each hand is always 1
 * 10's, J's, Q's, K's are all considered the same in Blackjack and are all represented as 10's
 * A's are all represented as 11's
