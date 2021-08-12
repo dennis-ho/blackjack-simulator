@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import argparse
 import csv
@@ -114,7 +114,7 @@ class Hand:
         return hand_val
 
     def is_blackjack(self):
-        return self.value() == 21 and len(self.cards) == 2 and 'P' not in self.actions and self.from_split is False
+        return self.value() == 21 and len(self.cards) == 2 and 'P' not in self.actions and not self.from_split
 
     def is_soft(self):
         hand_val = sum(self.cards)
@@ -155,6 +155,7 @@ class Table:
         self.player_hand = [Hand()]
         self.curr_idx = 0
         self.cards_remaining = len(self.shoe)
+        self.curr().count_hist.append((self.run_count(), self.true_count()))
 
         self.player_hand[0].count_hist.append((self.run_count(), self.true_count()))
         self.player_hand[0].cards.append(self.next_card())
@@ -189,11 +190,11 @@ class Table:
             actions.append('N')
             return actions
 
-        if len(self.curr().actions) == 0:
+        if len(self.curr().cards) == 2:
             actions.append('D')  # Note: Double down on blackjack is not wise but surprisingly is technically allowed
 
-        if len(self.curr().actions) == 0 and self.curr_idx == 0:  # Can not surrender after split
-            actions.append('R')
+        if len(self.curr().cards) == 2 and 'P' not in self.curr().actions and self.curr_idx == 0:
+            actions.append('R')  # Can not surrender after split
 
         if len(self.player_hand) < 4 and len(self.curr().cards) == 2 and self.curr().cards[0] == self.curr().cards[1]:
             if self.curr().cards[0] != 11 or len(self.player_hand) == 1:  # Assumes re-splitting Aces is not allowed
@@ -206,14 +207,17 @@ class Table:
         return actions
 
     def do_action(self, action):
-        self.curr().actions.append(action)
         self.curr().count_hist.append((self.run_count(), self.true_count()))
 
         if action == 'I':
             self.curr().insured = True
         if self.dealer_hand.is_blackjack():
+            if action in ['I', 'N']:
+                self.curr().actions.append(action)
             self.curr_idx = None
             return
+
+        self.curr().actions.append(action)
 
         if action == 'D':
             self.curr().bet *= 2
@@ -224,8 +228,8 @@ class Table:
             new_hand.from_split = True
             new_hand.cards.append(self.curr().cards.pop())
             self.player_hand.append(new_hand)
+            self.curr().cards.append(self.next_card())
             if new_hand.cards[0] == 11:  # Only 1 card when splitting Aces
-                self.curr().cards.append(self.next_card())
                 self.curr_idx += 1
                 new_hand.cards.append(self.next_card())
         if action == 'R':
@@ -236,7 +240,7 @@ class Table:
             if self.curr_idx == len(self.player_hand) - 1:
                 self.curr_idx = None
                 self.finish_dealer_hand()
-            else:
+            else:  # There is another hand waiting from a previous split
                 self.curr_idx += 1
                 self.curr().cards.append(self.next_card())
 
@@ -283,8 +287,6 @@ class Table:
                 result_val['win'] += hand.bet
             elif hand.value() < self.dealer_hand.value():
                 result_val['win'] -= hand.bet
-            else:
-                result_val['win'] += 0
         return result_val
 
     def run_count(self):
